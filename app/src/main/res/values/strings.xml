@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Rove</string>
+    <string name="cancel">Cancel</string>
+    <string name="go">Go</string>
+
+    <string name="location_pending">Finding your location</string>
+    <string name="location_error">Cannot find location!</string>
+    <string name="secret_location_received">Secret location received</string>
+</resources>

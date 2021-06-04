@@ -21,9 +21,6 @@ import com.groundspeak.rove.util.LatLng;
 import com.groundspeak.rove.util.SphericalUtil;
 import com.groundspeak.rove.util.Util;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
 public class MainActivity extends AppCompatActivity {
 
     public static final String EXTRA_TARGET_LAT = "MainActivity.TARGET_LATITUDE";

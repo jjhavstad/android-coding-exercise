@@ -19,6 +19,7 @@ import com.groundspeak.rove.databinding.ActivityMainBinding
 import com.groundspeak.rove.util.LatLng
 import com.groundspeak.rove.util.SphericalUtil
 import com.groundspeak.rove.util.Util
+import java.lang.ref.WeakReference
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -26,31 +27,37 @@ class MainActivity : AppCompatActivity() {
     private lateinit var locationRequest: LocationRequest
     private lateinit var targetLatLng: LatLng
 
+    private val weakThis: WeakReference<MainActivity> = WeakReference(this)
+
     private val onLocationReceived = OnLocationReceived { _location ->
-        binding.statusMessage.text = null
+        weakThis.get()?.apply {
+            binding.statusMessage.text = null
 
-        val userLatLng = LatLng(
-            latitude = _location.latitude,
-            longitude = _location.longitude
-        )
+            val userLatLng = LatLng(
+                latitude = _location.latitude,
+                longitude = _location.longitude
+            )
 
-        binding.distance.text = Util.getDistanceString(
-            SphericalUtil.computeDistanceBetween(userLatLng, targetLatLng)
-        )
+            binding.distance.text = Util.getDistanceString(
+                SphericalUtil.computeDistanceBetween(userLatLng, targetLatLng)
+            )
 
-        val matrix = Matrix()
-        val bounds = binding.compassArrow.drawable.bounds
-        matrix.postRotate(
-            SphericalUtil.computeHeading(userLatLng, targetLatLng).toFloat(),
-            bounds.width() / 2.0f,
-            bounds.height() / 2.0f
-        )
-        binding.compassArrow.scaleType = ImageView.ScaleType.MATRIX
-        binding.compassArrow.imageMatrix = matrix
+            val matrix = Matrix()
+            val bounds = binding.compassArrow.drawable.bounds
+            matrix.postRotate(
+                SphericalUtil.computeHeading(userLatLng, targetLatLng).toFloat(),
+                bounds.width() / 2.0f,
+                bounds.height() / 2.0f
+            )
+            binding.compassArrow.scaleType = ImageView.ScaleType.MATRIX
+            binding.compassArrow.imageMatrix = matrix
+        }
     }
 
     private val onLocationError = OnLocationError {
-        binding.statusMessage.setText(R.string.location_error);
+        weakThis.get()?.apply {
+            binding.statusMessage.setText(R.string.location_error);
+        }
     }
 
     private val locationCallback = OnLocationCallback(onLocationReceived, onLocationError)

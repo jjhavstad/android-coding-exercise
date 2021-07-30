@@ -11,6 +11,7 @@ import android.os.Build
 import android.view.Display
 import android.view.Surface
 import android.view.WindowManager
+import java.lang.ref.WeakReference
 import kotlin.math.PI
 
 class Compass(context: Context, val listener: CompassListener) {
@@ -21,6 +22,8 @@ class Compass(context: Context, val listener: CompassListener) {
     interface CompassListener {
         fun onHeadingUpdate(heading: Float)
     }
+
+    private val weakThis: WeakReference<Compass> = WeakReference(this)
 
     private val sensorManager: SensorManager
     private val display: Display?
@@ -43,7 +46,7 @@ class Compass(context: Context, val listener: CompassListener) {
         val fixedRotationMatrix = FloatArray(9)
         SensorManager.remapCoordinateSystem(rotationMatrix, x, y, fixedRotationMatrix)
         SensorManager.getOrientation(fixedRotationMatrix, orientation)
-        listener.onHeadingUpdate(180.0f * orientation[0] / PI.toFloat())
+        weakThis.get()?.listener?.onHeadingUpdate(180.0f * orientation[0] / PI.toFloat())
     }
 
     init {
@@ -56,10 +59,10 @@ class Compass(context: Context, val listener: CompassListener) {
         }
 
         sensorEventListener = CompassSensorEventListener(
-            onUpdateGravityVector = onUpdateGravityVector,
-            onUpdateMagneticFieldVector = onUpdateMagneticFieldVector,
-            onUpdateCoordinateSystem = onUpdateCoordinateSystem,
-            display = display
+            onUpdateGravityVector,
+            onUpdateMagneticFieldVector,
+            onUpdateCoordinateSystem,
+            display
         )
     }
 

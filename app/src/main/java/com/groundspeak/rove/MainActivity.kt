@@ -9,9 +9,7 @@ import android.graphics.Matrix
 import android.location.Location
 import android.os.Build
 import android.os.Bundle
-import android.os.PersistableBundle
 import android.widget.ImageView
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.*
@@ -179,14 +177,16 @@ class MainActivity : AppCompatActivity() {
     companion object {
         val EXTRA_TARGET_LAT = "MainActivity.TARGET_LATITUDE"
         val EXTRA_TARGET_LNG = "MainActivity.TARGET_LONGITUDE"
+        val EXTRA_TARGET_MESSAGE = "MainActivity.TARGET_MESSAGE"
         val EXTRA_RADIUS = "MainActivity.RADIUS" //distance (meters) at which to show message
 
         private val REQUEST_LOCATION_PERMISSION_CODE = 1000
 
-        fun createIntent(context: Context, latLng: LatLng): Intent {
+        fun createIntent(context: Context, latLng: LatLng, message: String): Intent {
             return Intent(context, MainActivity::class.java).also {
                 it.putExtra(EXTRA_TARGET_LAT, latLng.latitude)
                 it.putExtra(EXTRA_TARGET_LNG, latLng.longitude)
+                it.putExtra(EXTRA_TARGET_MESSAGE, message)
             }
         }
     }

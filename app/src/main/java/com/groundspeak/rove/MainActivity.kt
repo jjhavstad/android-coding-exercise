@@ -24,6 +24,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var locationClient: FusedLocationProviderClient
     private lateinit var locationRequest: LocationRequest
     private lateinit var targetLatLng: LatLng
+    private lateinit var destinationMessage: String
+
+    private var distanceToTargetThreshold: Double = 0.0
 
     private val weakThis: WeakReference<MainActivity> = WeakReference(this)
 
@@ -36,9 +39,8 @@ class MainActivity : AppCompatActivity() {
                 longitude = _location.longitude
             )
 
-            binding.distance.text = Util.getDistanceString(
-                SphericalUtil.computeDistanceBetween(userLatLng, targetLatLng)
-            )
+            val distanceBetween = SphericalUtil.computeDistanceBetween(userLatLng, targetLatLng)
+            binding.distance.text = Util.getDistanceString(distanceBetween)
 
             val matrix = Matrix()
             val bounds = binding.compassArrow.drawable.bounds
@@ -49,6 +51,16 @@ class MainActivity : AppCompatActivity() {
             )
             binding.compassArrow.scaleType = ImageView.ScaleType.MATRIX
             binding.compassArrow.imageMatrix = matrix
+
+            if (distanceBetween <= distanceToTargetThreshold) {
+                startActivity(
+                    DoneActivity.createIntent(
+                        context = this,
+                        targetMessage = destinationMessage
+                    )
+                )
+                finish()
+            }
         }
     }
 
@@ -67,6 +79,9 @@ class MainActivity : AppCompatActivity() {
 
         val latitude = intent?.getDoubleExtra(EXTRA_TARGET_LAT, 0.0) ?: 0.0
         val longitude = intent?.getDoubleExtra(EXTRA_TARGET_LNG, 0.0) ?: 0.0
+        destinationMessage = intent?.getStringExtra(EXTRA_TARGET_MESSAGE) ?: ""
+
+        distanceToTargetThreshold = DEFAULT_DISTANCE_TO_TARGET_THRESHOLD
 
         targetLatLng = LatLng(
             latitude = latitude,
@@ -181,6 +196,7 @@ class MainActivity : AppCompatActivity() {
         val EXTRA_RADIUS = "MainActivity.RADIUS" //distance (meters) at which to show message
 
         private val REQUEST_LOCATION_PERMISSION_CODE = 1000
+        private val DEFAULT_DISTANCE_TO_TARGET_THRESHOLD = 5.0 // distance in meters
 
         fun createIntent(context: Context, latLng: LatLng, message: String): Intent {
             return Intent(context, MainActivity::class.java).also {

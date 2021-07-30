@@ -1,5 +1,7 @@
 package com.groundspeak.rove
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -63,5 +65,9 @@ class PrimerActivity : AppCompatActivity() {
             binding.textView.visibility = View.VISIBLE
             binding.buttonGo.enable()
         }
+    }
+
+    companion object {
+        fun createIntent(context: Context) = Intent(context, PrimerActivity::class.java)
     }
 }

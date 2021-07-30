@@ -2,6 +2,7 @@
     <string name="app_name">Rove</string>
     <string name="cancel">Cancel</string>
     <string name="go">Go</string>
+    <string name="done">Done</string>
 
     <string name="location_pending">Finding your location</string>
     <string name="location_error">Cannot find location!</string>

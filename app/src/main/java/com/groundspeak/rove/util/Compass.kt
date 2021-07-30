@@ -19,7 +19,7 @@ class Compass(context: Context, val listener: CompassListener) {
     // Bearing = direction to destination, relative to North (clockwise)
     // Relative bearing = angle between Heading and Bearing (clockwise) (i.e. Bearing minus Heading)
 
-    interface CompassListener {
+    fun interface CompassListener {
         fun onHeadingUpdate(heading: Float)
     }
 
@@ -34,19 +34,36 @@ class Compass(context: Context, val listener: CompassListener) {
     private val orientation = FloatArray(3)
     private val rotationMatrix = FloatArray(9)
 
+    private val onGetRotationVector = OnGetRotationVector {
+        weakThis.get()?.run {
+            SensorManager.getRotationMatrix(
+                rotationMatrix,
+                null,
+                gravityVector,
+                magneticFieldVector
+            )
+        } ?: false
+    }
+
     private val onUpdateGravityVector = OnUpdateGravityVector {
-        gravityVector = lowPass(it, gravityVector)
+        weakThis.get()?.apply {
+            gravityVector = lowPass(it, gravityVector)
+        }
     }
 
     private val onUpdateMagneticFieldVector = OnUpdateMagneticFieldVector {
-        magneticFieldVector = lowPass(it, magneticFieldVector)
+        weakThis.get()?.apply {
+            magneticFieldVector = lowPass(it, magneticFieldVector)
+        }
     }
 
     private val onUpdateCoordinateSystem = OnUpdateCoordinateSystem { x, y ->
-        val fixedRotationMatrix = FloatArray(9)
-        SensorManager.remapCoordinateSystem(rotationMatrix, x, y, fixedRotationMatrix)
-        SensorManager.getOrientation(fixedRotationMatrix, orientation)
-        weakThis.get()?.listener?.onHeadingUpdate(180.0f * orientation[0] / PI.toFloat())
+        weakThis.get()?.apply {
+            val fixedRotationMatrix = FloatArray(9)
+            SensorManager.remapCoordinateSystem(rotationMatrix, x, y, fixedRotationMatrix)
+            SensorManager.getOrientation(fixedRotationMatrix, orientation)
+            listener.onHeadingUpdate(180.0f * orientation[0] / PI.toFloat())
+        }
     }
 
     init {
@@ -59,10 +76,11 @@ class Compass(context: Context, val listener: CompassListener) {
         }
 
         sensorEventListener = CompassSensorEventListener(
-            onUpdateGravityVector,
-            onUpdateMagneticFieldVector,
-            onUpdateCoordinateSystem,
-            display
+            onGetRotationVector = onGetRotationVector,
+            onUpdateGravityVector = onUpdateGravityVector,
+            onUpdateMagneticFieldVector = onUpdateMagneticFieldVector,
+            onUpdateCoordinateSystem = onUpdateCoordinateSystem,
+            display = display
         )
     }
 
@@ -91,6 +109,10 @@ class Compass(context: Context, val listener: CompassListener) {
         )
     }
 
+    fun interface OnGetRotationVector {
+        operator fun invoke(): Boolean
+    }
+
     fun interface OnUpdateGravityVector {
         operator fun invoke(eventValues: FloatArray)
     }
@@ -104,6 +126,7 @@ class Compass(context: Context, val listener: CompassListener) {
     }
 
     private class CompassSensorEventListener(
+        val onGetRotationVector: OnGetRotationVector,
         val onUpdateGravityVector: OnUpdateGravityVector,
         val onUpdateMagneticFieldVector: OnUpdateMagneticFieldVector,
         val onUpdateCoordinateSystem: OnUpdateCoordinateSystem,
@@ -116,23 +139,25 @@ class Compass(context: Context, val listener: CompassListener) {
                         Sensor.TYPE_ACCELEROMETER -> onUpdateGravityVector(event.values.clone())
                         Sensor.TYPE_MAGNETIC_FIELD -> onUpdateMagneticFieldVector(event.values.clone())
                     }
-                    var x = SensorManager.AXIS_X
-                    var y = SensorManager.AXIS_Y
-                    when (_rotation) {
-                        Surface.ROTATION_90 -> {
-                            x = SensorManager.AXIS_Y
-                            y = SensorManager.AXIS_MINUS_X
+                    if (onGetRotationVector()) {
+                        var x = SensorManager.AXIS_X
+                        var y = SensorManager.AXIS_Y
+                        when (_rotation) {
+                            Surface.ROTATION_90 -> {
+                                x = SensorManager.AXIS_Y
+                                y = SensorManager.AXIS_MINUS_X
+                            }
+                            Surface.ROTATION_180 -> {
+                                x = SensorManager.AXIS_X
+                                y = SensorManager.AXIS_Y
+                            }
+                            Surface.ROTATION_270 -> {
+                                x = SensorManager.AXIS_MINUS_Y
+                                y = SensorManager.AXIS_X
+                            }
                         }
-                        Surface.ROTATION_180 -> {
-                            x = SensorManager.AXIS_X
-                            y = SensorManager.AXIS_Y
-                        }
-                        Surface.ROTATION_270 -> {
-                            x = SensorManager.AXIS_MINUS_Y
-                            y = SensorManager.AXIS_X
-                        }
+                        onUpdateCoordinateSystem(x, y)
                     }
-                    onUpdateCoordinateSystem(x, y)
                 }
             }
         }

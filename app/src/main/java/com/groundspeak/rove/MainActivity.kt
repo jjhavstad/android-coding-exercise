@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.*
 import com.groundspeak.rove.databinding.ActivityMainBinding
+import com.groundspeak.rove.util.Compass
 import com.groundspeak.rove.util.LatLng
 import com.groundspeak.rove.util.SphericalUtil
 import com.groundspeak.rove.util.Util
@@ -27,8 +28,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var destinationMessage: String
 
     private var distanceToTargetThreshold: Double = 0.0
+    private var heading: Float? = null
 
     private val weakThis: WeakReference<MainActivity> = WeakReference(this)
+
+    private val compassListener = Compass.CompassListener {
+        weakThis.get()?.heading = it
+    }
+    private lateinit var compass: Compass
 
     private val onLocationReceived = OnLocationReceived { _location ->
         weakThis.get()?.apply {
@@ -42,10 +49,14 @@ class MainActivity : AppCompatActivity() {
             val distanceBetween = SphericalUtil.computeDistanceBetween(userLatLng, targetLatLng)
             binding.distance.text = Util.getDistanceString(distanceBetween)
 
+            val trueBearing = SphericalUtil.computeHeading(userLatLng, targetLatLng).toFloat()
+            val trueCourse = heading ?: 0.0f
+            val relativeBearing = trueBearing - trueCourse
+
             val matrix = Matrix()
             val bounds = binding.compassArrow.drawable.bounds
             matrix.postRotate(
-                SphericalUtil.computeHeading(userLatLng, targetLatLng).toFloat(),
+                relativeBearing,
                 bounds.width() / 2.0f,
                 bounds.height() / 2.0f
             )
@@ -99,16 +110,20 @@ class MainActivity : AppCompatActivity() {
         binding.cancelAction.setOnClickListener {
             finish()
         }
+
+        compass = Compass(this, compassListener)
     }
 
     override fun onResume() {
         super.onResume()
         requestLocationUpdates()
+        compass.start()
     }
 
     override fun onPause() {
         super.onPause()
         stopLocationUpdates()
+        compass.stop()
     }
 
     override fun onRequestPermissionsResult(

@@ -2,11 +2,10 @@ package com.groundspeak.rove
 
 import android.app.Application
 import com.groundspeak.rove.datasources.api.ApiDestinationDataSource
-import com.groundspeak.rove.datasources.api.retrofit.RetrofitDestinationApi
 import com.groundspeak.rove.datasources.api.retrofit.RetrofitDestinationApiCreator
 import com.groundspeak.rove.datasources.api.retrofit.RetrofitDestinationDataSource
 import com.groundspeak.rove.viewmodels.DestinationViewModel
-import com.groundspeak.rove.viewmodels.OrientationSensorViewModel
+import com.groundspeak.rove.viewmodels.LocationViewModel
 import okhttp3.OkHttpClient
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -35,7 +34,7 @@ class RoveApplication : Application() {
                 DestinationViewModel(get())
             }
             viewModel {
-                OrientationSensorViewModel()
+                LocationViewModel()
             }
         }
 

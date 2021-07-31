@@ -15,14 +15,13 @@ import java.lang.ref.WeakReference
 import kotlin.math.PI
 
 class Compass(
-    context: Context,
     override val listener: OrientationSensorListener
 ): OrientationSensor {
     private val weakThis: WeakReference<Compass> = WeakReference(this)
 
-    private val sensorManager: SensorManager
-    private val display: Display?
-    private val sensorEventListener: SensorEventListener
+    private var sensorManager: SensorManager? = null
+    private var display: Display? = null
+    private var sensorEventListener: SensorEventListener? = null
 
     private var gravityVector = FloatArray(3)
     private var magneticFieldVector = FloatArray(3)
@@ -61,46 +60,50 @@ class Compass(
         }
     }
 
-    init {
-        sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+    class Builder(listener: OrientationSensorListener) {
+        private val compass: Compass = Compass(listener)
+        fun context(context: Context) = apply {
+            compass.sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
 
-        display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            context.display
-        } else {
-            (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay
+            compass.display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                context.display
+            } else {
+                (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay
+            }
+
+            compass.sensorEventListener = CompassSensorEventListener(
+                onGetRotationVector = compass.onGetRotationVector,
+                onUpdateGravityVector = compass.onUpdateGravityVector,
+                onUpdateMagneticFieldVector = compass.onUpdateMagneticFieldVector,
+                onUpdateCoordinateSystem = compass.onUpdateCoordinateSystem,
+                display = compass.display
+            )
         }
-
-        sensorEventListener = CompassSensorEventListener(
-            onGetRotationVector = onGetRotationVector,
-            onUpdateGravityVector = onUpdateGravityVector,
-            onUpdateMagneticFieldVector = onUpdateMagneticFieldVector,
-            onUpdateCoordinateSystem = onUpdateCoordinateSystem,
-            display = display
-        )
+        fun build(): Compass = compass
     }
 
     override fun start() {
-        sensorManager.registerListener(
+        sensorManager?.registerListener(
             sensorEventListener,
-            sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
+            sensorManager?.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
             SensorManager.SENSOR_DELAY_UI
         )
-        sensorManager.registerListener(
+        sensorManager?.registerListener(
             sensorEventListener,
-            sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+            sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
             SensorManager.SENSOR_DELAY_UI
         )
     }
 
     override fun stop() {
-        sensorManager.unregisterListener(
-            sensorEventListener, sensorManager.getDefaultSensor(
+        sensorManager?.unregisterListener(
+            sensorEventListener, sensorManager?.getDefaultSensor(
                 Sensor.TYPE_ACCELEROMETER
             )
         )
-        sensorManager.unregisterListener(
+        sensorManager?.unregisterListener(
             sensorEventListener,
-            sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
+            sensorManager?.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
         )
     }
 

@@ -12,12 +12,14 @@ import android.os.Bundle
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.Observer
 import com.google.android.gms.location.*
 import com.groundspeak.rove.databinding.ActivityMainBinding
-import com.groundspeak.rove.util.Compass
 import com.groundspeak.rove.util.LatLng
 import com.groundspeak.rove.util.SphericalUtil
 import com.groundspeak.rove.util.Util
+import com.groundspeak.rove.viewmodels.OrientationSensorViewModel
+import org.koin.android.viewmodel.ext.android.viewModel
 import java.lang.ref.WeakReference
 
 class MainActivity : AppCompatActivity() {
@@ -32,10 +34,10 @@ class MainActivity : AppCompatActivity() {
 
     private val weakThis: WeakReference<MainActivity> = WeakReference(this)
 
-    private val compassListener = Compass.CompassListener {
+    private val orientationSensorViewModel: OrientationSensorViewModel by viewModel()
+    private val orientationSensorLiveDataObserver = Observer<Float> {
         weakThis.get()?.heading = it
     }
-    private lateinit var compass: Compass
 
     private val onLocationReceived = OnLocationReceived { _location ->
         weakThis.get()?.apply {
@@ -111,19 +113,20 @@ class MainActivity : AppCompatActivity() {
             finish()
         }
 
-        compass = Compass(this, compassListener)
+        orientationSensorViewModel.headingLiveData.observe(
+            this, orientationSensorLiveDataObserver)
     }
 
     override fun onResume() {
         super.onResume()
         requestLocationUpdates()
-        compass.start()
+        orientationSensorViewModel.start()
     }
 
     override fun onPause() {
         super.onPause()
         stopLocationUpdates()
-        compass.stop()
+        orientationSensorViewModel.stop()
     }
 
     override fun onRequestPermissionsResult(

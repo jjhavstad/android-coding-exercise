@@ -14,15 +14,10 @@ import android.view.WindowManager
 import java.lang.ref.WeakReference
 import kotlin.math.PI
 
-class Compass(context: Context, val listener: CompassListener) {
-    // Heading = direction device is pointing, relative to North (clockwise)
-    // Bearing = direction to destination, relative to North (clockwise)
-    // Relative bearing = angle between Heading and Bearing (clockwise) (i.e. Bearing minus Heading)
-
-    fun interface CompassListener {
-        fun onHeadingUpdate(heading: Float)
-    }
-
+class Compass(
+    context: Context,
+    override val listener: OrientationSensorListener
+): OrientationSensor {
     private val weakThis: WeakReference<Compass> = WeakReference(this)
 
     private val sensorManager: SensorManager
@@ -84,7 +79,7 @@ class Compass(context: Context, val listener: CompassListener) {
         )
     }
 
-    fun start() {
+    override fun start() {
         sensorManager.registerListener(
             sensorEventListener,
             sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
@@ -97,7 +92,7 @@ class Compass(context: Context, val listener: CompassListener) {
         )
     }
 
-    fun stop() {
+    override fun stop() {
         sensorManager.unregisterListener(
             sensorEventListener, sensorManager.getDefaultSensor(
                 Sensor.TYPE_ACCELEROMETER

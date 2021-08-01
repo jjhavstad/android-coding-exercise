@@ -7,6 +7,16 @@
     android:layout_height="match_parent"
     tools:context="com.groundspeak.rove.PrimerActivity">
 
+    <ImageView
+        android:id="@+id/offline_img"
+        android:layout_width="12dp"
+        android:layout_height="12dp"
+        android:layout_margin="8dp"
+        android:src="@drawable/baseline_cloud_off_24"
+        android:scaleType="fitXY"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
     <Button
         android:id="@+id/button_go"
         android:layout_width="240dp"

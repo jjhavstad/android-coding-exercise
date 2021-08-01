@@ -2,6 +2,10 @@ package com.groundspeak.rove
 
 import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -13,9 +17,11 @@ import com.groundspeak.rove.models.Destination
 import com.groundspeak.rove.util.LatLng
 import com.groundspeak.rove.viewmodels.DestinationViewModel
 import org.koin.android.viewmodel.ext.android.viewModel
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.lang.ref.WeakReference
 
-class PrimerActivity : AppCompatActivity() {
+class PrimerActivity : AppCompatActivity(), KoinComponent {
     //TODO Request location permission at runtime on API >= 21
     //TODO show magic location settings dialog (if necessary)
 
@@ -30,6 +36,16 @@ class PrimerActivity : AppCompatActivity() {
     }
 
     private var nextDestination: Destination? = null
+
+    private val networkStateListener: NetworkStateListener by inject()
+    private val onNetworkStateChangeListener = NetworkStateListener.OnStateChangeListener {
+        weakThis.get()?.apply {
+            destinationViewModel.statusOnline = it
+            runOnUiThread {
+                binding.offlineImg.visibility = if (it) View.GONE else View.VISIBLE
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,11 +68,19 @@ class PrimerActivity : AppCompatActivity() {
         }
 
         destinationViewModel.destinationLiveData.observe(this, destinationLiveDataObserver)
+
+        networkStateListener.addOnStateChangeListener(onNetworkStateChangeListener)
     }
 
     override fun onResume() {
         super.onResume()
+        registerNetworkStateChangeListener()
         destinationViewModel.requestData()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        unregisterNetworkStateChangeListener()
     }
 
     private fun onDestinationListReceived(destinations: List<Destination>) {
@@ -65,6 +89,28 @@ class PrimerActivity : AppCompatActivity() {
             binding.textView.visibility = View.VISIBLE
             binding.buttonGo.enable()
         }
+    }
+
+    private fun registerNetworkStateChangeListener() {
+        val connectivityManager: ConnectivityManager =
+            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val networkConnected = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            connectivityManager.activeNetwork != null
+        } else {
+            connectivityManager.activeNetworkInfo != null &&
+                    connectivityManager.activeNetworkInfo?.isConnected == true
+        }
+        onNetworkStateChangeListener.sendNetworkStatus(networkConnected)
+        connectivityManager.registerNetworkCallback(
+            NetworkRequest.Builder().addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET).build(),
+            networkStateListener
+        )
+    }
+
+    private fun unregisterNetworkStateChangeListener() {
+        val connectivityManager: ConnectivityManager =
+            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        connectivityManager.unregisterNetworkCallback(networkStateListener)
     }
 
     companion object {

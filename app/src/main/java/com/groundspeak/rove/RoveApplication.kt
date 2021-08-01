@@ -4,6 +4,9 @@ import android.app.Application
 import com.groundspeak.rove.datasources.api.ApiDestinationDataSource
 import com.groundspeak.rove.datasources.api.retrofit.RetrofitDestinationApiCreator
 import com.groundspeak.rove.datasources.api.retrofit.RetrofitDestinationDataSource
+import com.groundspeak.rove.datasources.local.LocalDestinationDataSource
+import com.groundspeak.rove.datasources.local.room.DestinationDatabaseCreator
+import com.groundspeak.rove.datasources.local.room.RoomDestinationDataSource
 import com.groundspeak.rove.viewmodels.DestinationViewModel
 import com.groundspeak.rove.viewmodels.LocationViewModel
 import okhttp3.OkHttpClient
@@ -27,14 +30,25 @@ class RoveApplication : Application() {
                     httpClientBuilder = OkHttpClient.Builder()
                 )
             }
+            single {
+                DestinationDatabaseCreator.create(
+                    RoveApplication@this.androidContext()
+                )
+            }
             single<ApiDestinationDataSource> {
                 RetrofitDestinationDataSource(get())
             }
+            single<LocalDestinationDataSource> {
+                RoomDestinationDataSource(get())
+            }
             viewModel {
-                DestinationViewModel(get())
+                DestinationViewModel(get(), get())
             }
             viewModel {
                 LocationViewModel()
+            }
+            single {
+                NetworkStateListener()
             }
         }
 

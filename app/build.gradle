@@ -1,5 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
 
 android {
     compileSdkVersion 30
@@ -42,6 +43,8 @@ dependencies {
     implementation "com.squareup.retrofit2:retrofit:$retrofit_version"
     implementation "com.squareup.retrofit2:converter-gson:$retrofit_version"
     implementation "com.google.android.material:material:1.2.1"
+    implementation "androidx.room:room-runtime:$room_version"
+    kapt "androidx.room:room-compiler:$room_version"
     androidTestImplementation("androidx.test.espresso:espresso-core:$espresso_version", {
         exclude group: "com.android.support", module: "support-annotations"
     })

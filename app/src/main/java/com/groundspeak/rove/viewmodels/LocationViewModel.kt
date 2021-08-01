@@ -1,13 +1,11 @@
 package com.groundspeak.rove.viewmodels
 
-import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.groundspeak.rove.models.LocationStatus
 import com.groundspeak.rove.util.LatLng
 import com.groundspeak.rove.util.OrientationSensorListener
-import com.groundspeak.rove.util.Compass
 import com.groundspeak.rove.util.OnLocationCallback
 import com.groundspeak.rove.util.OrientationSensor
 import com.groundspeak.rove.util.OnLocationError
@@ -43,7 +41,7 @@ class LocationViewModel : ViewModel() {
 
                 val distanceBetween = SphericalUtil.computeDistanceBetween(userLatLng, _targetLatLng)
                 val trueBearing = SphericalUtil.computeHeading(userLatLng, _targetLatLng).toFloat()
-                val trueCourse = heading ?: 0.0f
+                val trueCourse = heading ?: trueBearing
                 val relativeBearing = trueBearing - trueCourse
                 _locationLiveData.postValue(
                     LocationStatus(

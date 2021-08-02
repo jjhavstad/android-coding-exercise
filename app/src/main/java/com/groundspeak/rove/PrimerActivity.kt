@@ -16,7 +16,7 @@ import com.groundspeak.rove.ext.enable
 import com.groundspeak.rove.models.Destination
 import com.groundspeak.rove.util.LatLng
 import com.groundspeak.rove.viewmodels.DestinationViewModel
-import org.koin.android.viewmodel.ext.android.viewModel
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.lang.ref.WeakReference

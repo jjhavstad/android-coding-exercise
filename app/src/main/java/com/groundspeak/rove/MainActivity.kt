@@ -19,7 +19,7 @@ import com.groundspeak.rove.util.Compass
 import com.groundspeak.rove.util.LatLng
 import com.groundspeak.rove.util.Util
 import com.groundspeak.rove.viewmodels.LocationViewModel
-import org.koin.android.viewmodel.ext.android.viewModel
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.lang.ref.WeakReference
 
 class MainActivity : AppCompatActivity() {
